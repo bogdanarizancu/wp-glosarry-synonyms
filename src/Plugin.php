@@ -54,7 +54,7 @@ class Plugin
 			$postID = get_the_ID();
 			if (get_post_type($postID) === self::POST_TYPE) {
 				$associatedGlossary = get_post(8);
-				return ' <br/><small>(' . $associatedGlossary->post_title . ')</small>'. $title; 
+				return ' <br/><small>(<a style="color: inherit;" href="' . get_permalink(8) . '">' . $associatedGlossary->post_title . '</a>)</small>'. $title; 
 			}
 			return $title;
 		}, 10, 2);
