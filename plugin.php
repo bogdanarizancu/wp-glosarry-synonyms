@@ -18,8 +18,6 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-require_once '/Users/b-t.arizancu/Personal/wp-glossary/wp-content/plugins/wp_glossary/includes/class-wpg-linkify.php';
-
 /**
  * Loads PSR-4-style plugin classes.
  */
