@@ -42,10 +42,10 @@ class Plugin
      */
     public function init()
     {
-		if (!is_admin()) {
-			new Linkify();
-		}
-		$this->includeSynonymInPostQuery();
+        if (!is_admin()) {
+            new Linkify();
+        }
+        $this->includeSynonymInPostQuery();
         $this->registerSynonymPostType();
 
         if (is_admin()) {

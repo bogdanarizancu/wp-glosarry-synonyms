@@ -7,6 +7,7 @@
  */
 
 namespace WPGlossarySynonyms;
+
 use WPG_Linkify;
 
 class Linkify extends WPG_Linkify
