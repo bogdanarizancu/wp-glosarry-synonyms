@@ -47,7 +47,7 @@ class Plugin
         if (is_admin()) {
             return;
         }
-        
+
         // Instantiate class only for frontend, since that is where the limit counter is used.
         new Linkify();
 
