@@ -42,29 +42,32 @@ add_action('plugins_loaded', [$plugin, 'loadTextdomain']);
 add_action('init', [$plugin, 'init'], 20);
 add_action('admin_init', [new Admin(), 'init']);
 
-include_once('/Users/b-t.arizancu/Personal/wp-glossary/wp-content/plugins/wp_glossary/includes/class-wpg-linkify.php');
-include_once('src/class-wpg-linkify.php');
+require_once '/Users/b-t.arizancu/Personal/wp-glossary/wp-content/plugins/wp_glossary/includes/class-wpg-linkify.php';
+require_once 'src/class-wpg-linkify.php';
 
 require __DIR__ . '/vendor/autoload.php';
 
-add_filter('wpg_settings', function ($optionSections) {
-    $option = [
+add_filter(
+    'wpg_settings',
+    function ($optionSections) {
+        $option = [
         'wpg_glossary_linkify_synonym_limit' => [
             'name' => 'wpg_glossary_linkify_synonym_limit',
             'label' => 'Linkify Limit per Synonym',
             'type' => 'number',
             'desc' => 'Same as linkify limit for terms, but applied to synonyms.',
         ]
-    ];
-    $linkifyOptions = $optionSections['section_linkify']['options'];
+        ];
+        $linkifyOptions = $optionSections['section_linkify']['options'];
 
-    $optionSections['section_linkify']['options'] = push_at_to_associative_array($optionSections['section_linkify']['options'], 'wpg_glossary_linkify_term_limit', $option);
-    return $optionSections;
-});
+        $optionSections['section_linkify']['options'] = push_at_to_associative_array($optionSections['section_linkify']['options'], 'wpg_glossary_linkify_term_limit', $option);
+        return $optionSections;
+    }
+);
 
 function push_at_to_associative_array($array, $key, $new)
 {
-	$keys = array_keys($array);
+    $keys = array_keys($array);
     $index = array_search($key, $keys, true);
     $pos = false === $index ? count($array) : $index + 1;
 
