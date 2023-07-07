@@ -42,7 +42,10 @@ class Plugin
      */
     public function init()
     {
-        $this->includeSynonymInPostQuery();
+		if (!is_admin()) {
+			new Linkify();
+		}
+		$this->includeSynonymInPostQuery();
         $this->registerSynonymPostType();
 
         if (is_admin()) {
@@ -57,7 +60,7 @@ class Plugin
             }
             return $title;
         }, 10, 2);
-	}
+    }
 
     /**
      * Loads the plugin textdomain.

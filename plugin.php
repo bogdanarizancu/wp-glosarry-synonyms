@@ -18,6 +18,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once '/Users/b-t.arizancu/Personal/wp-glossary/wp-content/plugins/wp_glossary/includes/class-wpg-linkify.php';
+
 /**
  * Loads PSR-4-style plugin classes.
  */
@@ -41,9 +43,6 @@ $plugin = new Plugin();
 add_action('plugins_loaded', [$plugin, 'loadTextdomain']);
 add_action('init', [$plugin, 'init'], 20);
 add_action('admin_init', [new Admin(), 'init']);
-
-require_once '/Users/b-t.arizancu/Personal/wp-glossary/wp-content/plugins/wp_glossary/includes/class-wpg-linkify.php';
-require_once 'src/class-wpg-linkify.php';
 
 require __DIR__ . '/vendor/autoload.php';
 
