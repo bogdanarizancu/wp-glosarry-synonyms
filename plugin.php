@@ -64,7 +64,7 @@ add_filter('wpg_settings', function ($optionSections) {
 
 function push_at_to_associative_array($array, $key, $new)
 {
-    $keys =   array_keys($array);
+    $keys =    array_keys($array);
     $index = array_search($key, $keys, true);
     $pos = false === $index ? count($array) : $index + 1;
 
