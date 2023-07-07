@@ -43,7 +43,7 @@ add_action('init', [$plugin, 'init'], 20);
 add_action('admin_init', [new Admin(), 'init']);
 
 if (file_exists(__DIR__ . '/vendor/autoload.php')) {
-	require __DIR__ . '/vendor/autoload.php';
+    require __DIR__ . '/vendor/autoload.php';
 }
 
 add_filter(
