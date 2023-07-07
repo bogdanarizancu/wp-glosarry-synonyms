@@ -42,16 +42,16 @@ class Plugin
      */
     public function init()
     {
-        if (!is_admin()) {
-            new Linkify();
-        }
-        $this->includeSynonymInPostQuery();
         $this->registerSynonymPostType();
 
         if (is_admin()) {
             return;
         }
+        
+        // Instantiate class only for frontend, since that is where the limit counter is used.
+        new Linkify();
 
+        //  Custom functionality for sysnonyms to show the parent term title in brackets.
         add_filter('wpg_tooltip_term_title_end', function ($title) {
             $postID = get_the_ID();
             if (get_post_type($postID) === self::POST_TYPE) {
@@ -60,6 +60,15 @@ class Plugin
             }
             return $title;
         }, 10, 2);
+
+        // Include sysnonym post type in frontend query.
+        add_filter('wpg_list_query_args', function ($args) {
+            $args['post_type'] = [$args['post_type'], self::POST_TYPE];
+            return $args;
+        });
+
+        // Add shortcode functionliaty to list all synonyms, comma separated.
+        add_shortcode('wpgs_list', array($this, 'setShortcode'));
     }
 
     /**
@@ -180,11 +189,20 @@ class Plugin
         <?php
     }
 
-    public function includeSynonymInPostQuery()
+    public function setShortcode($args)
     {
-        add_filter('wpg_list_query_args', function ($args) {
-            $args['post_type'] = [$args['post_type'], self::POST_TYPE];
-            return $args;
-        });
+        $query_args = array(
+            'post_type' => self::POST_TYPE,
+            'posts_per_page' => -1,
+            'fields' => ['post_title'],
+            'orderby' => 'title',
+            'order' => 'ASC'
+        );
+        if (!empty($args['term_id'])) {
+            $query_args['meta_key'] = 'associated_term';
+            $query_args['meta_value'] = $args['term_id'];
+        }
+        $synonyms = wp_list_pluck(get_posts($query_args), 'post_title');
+        return '<p>' . implode(', ', $synonyms) . '</p>';
     }
 }

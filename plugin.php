@@ -55,7 +55,6 @@ add_filter(
             'desc' => 'Same as linkify limit for terms, but applied to synonyms.',
         ]
         ];
-        $linkifyOptions = $optionSections['section_linkify']['options'];
 
         $optionSections['section_linkify']['options'] = push_at_to_associative_array($optionSections['section_linkify']['options'], 'wpg_glossary_linkify_term_limit', $option);
         return $optionSections;
