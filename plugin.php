@@ -14,21 +14,22 @@
 namespace WPGlossarySynonyms;
 
 if (!defined('ABSPATH')) {
-  header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
-  exit;
+    header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+    exit;
 }
 
 /**
  * Loads PSR-4-style plugin classes.
  */
-function classloader($class) {
-  static $ns_offset;
-  if (strpos($class, __NAMESPACE__ . '\\') === 0) {
-    if ($ns_offset === NULL) {
-      $ns_offset = strlen(__NAMESPACE__) + 1;
+function classloader($class)
+{
+    static $ns_offset;
+    if (strpos($class, __NAMESPACE__ . '\\') === 0) {
+        if ($ns_offset === null) {
+            $ns_offset = strlen(__NAMESPACE__) + 1;
+        }
+        include __DIR__ . '/src/' . strtr(substr($class, $ns_offset), '\\', '/') . '.php';
     }
-    include __DIR__ . '/src/' . strtr(substr($class, $ns_offset), '\\', '/') . '.php';
-  }
 }
 spl_autoload_register(__NAMESPACE__ . '\classloader');
 
