@@ -14,21 +14,22 @@
 namespace WPGlossarySynonyms;
 
 if (!defined('ABSPATH')) {
-  header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
-  exit;
+    header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+    exit;
 }
 
 /**
  * Loads PSR-4-style plugin classes.
  */
-function classloader($class) {
-  static $ns_offset;
-  if (strpos($class, __NAMESPACE__ . '\\') === 0) {
-    if ($ns_offset === NULL) {
-      $ns_offset = strlen(__NAMESPACE__) + 1;
+function classloader($class)
+{
+    static $ns_offset;
+    if (strpos($class, __NAMESPACE__ . '\\') === 0) {
+        if ($ns_offset === null) {
+            $ns_offset = strlen(__NAMESPACE__) + 1;
+        }
+        include __DIR__ . '/src/' . strtr(substr($class, $ns_offset), '\\', '/') . '.php';
     }
-    include __DIR__ . '/src/' . strtr(substr($class, $ns_offset), '\\', '/') . '.php';
-  }
 }
 spl_autoload_register(__NAMESPACE__ . '\classloader');
 
@@ -39,3 +40,33 @@ register_uninstall_hook(__FILE__, __NAMESPACE__ . '\Schema::uninstall');
 $plugin = new Plugin();
 add_action('plugins_loaded', [$plugin, 'loadTextdomain']);
 add_action('init', [$plugin, 'init'], 20);
+add_action('admin_init', [new Admin(), 'init']);
+
+require __DIR__ . '/vendor/autoload.php';
+
+add_filter(
+    'wpg_settings',
+    function ($optionSections) {
+        $option = [
+        'wpg_glossary_linkify_synonym_limit' => [
+            'name' => 'wpg_glossary_linkify_synonym_limit',
+            'label' => 'Linkify Limit per Synonym',
+            'type' => 'number',
+            'desc' => 'Same as linkify limit for terms, but applied to synonyms.',
+        ]
+        ];
+
+        $optionSections['section_linkify']['options'] = push_at_to_associative_array($optionSections['section_linkify']['options'], 'wpg_glossary_linkify_term_limit', $option);
+        return $optionSections;
+    }
+);
+
+function push_at_to_associative_array($array, $key, $new)
+{
+    $keys = array_keys($array);
+    $index = array_search($key, $keys, true);
+    $pos = false === $index ? count($array) : $index + 1;
+
+    $array = array_slice($array, 0, $pos, true) + $new + array_slice($array, $pos, count($array) - 1, true);
+    return $array;
+}
