@@ -223,11 +223,12 @@ class Plugin
             return $permalink;
         }
         $associatedTerm = $this->getAssociatedTerm($post->ID);
-        
+
         return $associatedTerm ? get_permalink($associatedTerm) : $permalink;
     }
 
-    public function maybeReplaceExcerpt($content) {
+    public function maybeReplaceExcerpt($content)
+    {
         global $post;
         if ($post->post_type === self::POST_TYPE && empty($post->post_excerpt)) {
             $associatedTerm = $this->getAssociatedTerm($post->ID);
