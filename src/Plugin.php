@@ -51,12 +51,17 @@ class Plugin
         // Instantiate class only for frontend, since that is where the limit counter is used.
         new Linkify();
 
+        // Replace synonyms permalink with parent glossary term permalink, as requested
+        add_filter('post_type_link', array($this, 'replacePermalink'), 10, 2);
+
+        // Get parent post excerpt if synonym excerpt is empty
+        add_filter('wpg_tooltip_excerpt', array($this, 'maybeReplaceExcerpt'));
+
         //  Custom functionality for sysnonyms to show the parent term title in brackets.
         add_filter('wpg_tooltip_term_title_end', function ($title) {
             $postID = get_the_ID();
-            if (get_post_type($postID) === self::POST_TYPE) {
-                $associatedGlossary = get_post(8);
-                return ' <br/><small>(<a style="color: inherit;" href="' . get_permalink(8) . '">' . $associatedGlossary->post_title . '</a>)</small>' . $title;
+            if (get_post_type($postID) === self::POST_TYPE && $associatedTerm = $this->getAssociatedTerm($postID)) {
+                return ' <br/><a style="color: inherit;" class="main-term" href="' . get_permalink($associatedTerm) . '">(' . $associatedTerm->post_title . ')</a>' . $title;
             }
             return $title;
         }, 10, 2);
@@ -69,6 +74,12 @@ class Plugin
 
         // Add shortcode functionliaty to list all synonyms, comma separated.
         add_shortcode('wpgs_list', array($this, 'setShortcode'));
+    }
+
+    private function getAssociatedTerm($synonymID)
+    {
+        $associatedTermID = get_post_meta($synonymID, 'associated_term', true);
+        return get_post($associatedTermID);
     }
 
     /**
@@ -204,5 +215,24 @@ class Plugin
         }
         $synonyms = wp_list_pluck(get_posts($query_args), 'post_title');
         return '<p>' . implode(', ', $synonyms) . '</p>';
+    }
+
+    public function replacePermalink($permalink, $post)
+    {
+        if ($post->post_type !== self::POST_TYPE) {
+            return $permalink;
+        }
+        $associatedTerm = $this->getAssociatedTerm($post->ID);
+        
+        return $associatedTerm ? get_permalink($associatedTerm) : $permalink;
+    }
+
+    public function maybeReplaceExcerpt($content) {
+        global $post;
+        if ($post->post_type === self::POST_TYPE && empty($post->post_excerpt)) {
+            $associatedTerm = $this->getAssociatedTerm($post->ID);
+            return $associatedTerm->post_excerpt;
+        }
+        return $content;
     }
 }
