@@ -129,7 +129,7 @@ class Plugin
                 'description' => __('Description.', 'wp-glossary-synonyms'),
                 'menu_icon' => 'dashicons-editor-spellcheck',
                 'capability_type' => 'post',
-                'rewrite' => array('slug' => self::POST_TYPE, 'with_front' => false),
+                'rewrite' => false,
                 'public' => false,
                 'publicly_queryable' => false,
                 'show_ui' => true,
