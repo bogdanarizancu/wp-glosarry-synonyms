@@ -14,6 +14,7 @@ class Admin
     {
         // Save Meta box
         add_action('save_post', array($this, 'save_meta_box'));
+        add_filter('wpg_settings', array($this, 'extendSettings'));
     }
 
     public function save_meta_box($post_id)
@@ -31,7 +32,7 @@ class Admin
         }
 
         // Save Fields
-        $fields = array ('associated_term', 'synonym_spellings', 'wpg_disable_tooltip', 'wpg_disable_linkify', 'wpg_exclude_from_glossary_index', 'wpg_exclude_from_linkify' );
+        $fields = array ('associated_term', Plugin::ALTERNATIVE_SPELLINGS, 'wpg_disable_tooltip', 'wpg_disable_linkify', 'wpg_exclude_from_glossary_index', 'wpg_exclude_from_linkify' );
 
         foreach ($fields as $field) {
             $value = isset($_REQUEST[ $field ]) ? $_REQUEST[ $field ] : '';
@@ -42,5 +43,20 @@ class Admin
                 delete_post_meta($post_id, $field);
             }
         }
+    }
+
+    public function extendSettings($optionSections)
+    {
+        $option = [
+            'wpg_glossary_linkify_synonym_limit' => [
+                'name' => 'wpg_glossary_linkify_synonym_limit',
+                'label' => 'Linkify Limit per Synonym',
+                'type' => 'number',
+                'desc' => 'Same as linkify limit for terms, but applied to synonyms.',
+            ]
+        ];
+
+        $optionSections['section_linkify']['options'] = push_at_to_associative_array($optionSections['section_linkify']['options'], 'wpg_glossary_linkify_term_limit', $option);
+        return $optionSections;
     }
 }

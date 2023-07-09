@@ -38,11 +38,20 @@ class Plugin
     const L10N = self::PREFIX;
 
     /**
+     * Alternative spellings post meta key.
+     *
+     * @var string
+     */
+    const ALTERNATIVE_SPELLINGS = 'alternative_spellings';
+
+    /**
      * Plugin initialization method.
      */
     public function init()
     {
         $this->registerSynonymPostType();
+
+        new PostTypes();
 
         if (is_admin()) {
             return;
@@ -189,7 +198,7 @@ class Plugin
                             <?php _e('Spelings', self::PREFIX); ?>
                         </label></th>
                     <td>
-                        <input type="text" class="large-text" name="synonym_spellings" value="<?php echo esc_attr(get_post_meta($post->ID, 'synonym_spellings', true)); ?>" />
+                        <input type="text" class="large-text" name="<?php echo Plugin::ALTERNATIVE_SPELLINGS; ?>" value="<?php echo esc_attr(get_post_meta($post->ID, Plugin::ALTERNATIVE_SPELLINGS, true)); ?>" />
                         <p class="description">
                             <?php _e('You can define multiple comma separated spelings here.', self::PREFIX); ?>
                         </p>

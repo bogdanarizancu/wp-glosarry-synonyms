@@ -151,7 +151,7 @@ class Linkify extends WPG_Linkify
      * Format Glossary Terms Array
      *
      * Overwrites parent's method to allow linkifying spellings using the separate
-     *  post meta field called 'synonym_spellings'.
+     *  post meta field.
      */
     public function format_glossary_terms()
     {
@@ -182,7 +182,7 @@ class Linkify extends WPG_Linkify
             // }
 
             // Spellings post meta.
-            $spellings = explode(',', get_post_meta($glossary_term->ID, 'synonym_spellings', true));
+            $spellings = explode(',', get_post_meta($glossary_term->ID, Plugin::ALTERNATIVE_SPELLINGS, true));
             foreach ($spellings as $spelling) {
                 $wpg_glossary_terms_key[] = $this->format_glossary_term_string($spelling);
             }
