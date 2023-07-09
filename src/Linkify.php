@@ -117,9 +117,7 @@ class Linkify extends WPG_Linkify
                 ),
             )
         );
-        add_filter('wpg_glossary_terms_query_args', array($this, 'querySynonyms'));
         $this->glossary_terms = wpg_glossary_terms('linkify');
-        remove_filter('wpg_glossary_terms_query_args', array($this, 'querySynonyms'));
         if (empty($this->glossary_terms)) {
             return;
         }
@@ -141,12 +139,6 @@ class Linkify extends WPG_Linkify
         $this->is_term_limit_for_full_page = wpg_glossary_is_linkify_limit_for_full_page();
     }
 
-    public function querySynonyms($args)
-    {
-        $args['post_type'] = ['glossary', 'glossary-synonym'];
-        return $args;
-    }
-
     /**
      * Format Glossary Terms Array
      *
@@ -157,6 +149,7 @@ class Linkify extends WPG_Linkify
     {
         $wpg_glossary_terms = array();
         global $post;
+
         foreach ($this->glossary_terms as $glossary_term) {
 
             /**
@@ -182,7 +175,8 @@ class Linkify extends WPG_Linkify
             // }
 
             // Spellings post meta.
-            $spellings = explode(',', get_post_meta($glossary_term->ID, Plugin::ALTERNATIVE_SPELLINGS, true));
+            $spellings = array_filter(explode(',', get_post_meta($glossary_term->ID, Plugin::ALTERNATIVE_SPELLINGS, true)));
+
             foreach ($spellings as $spelling) {
                 $wpg_glossary_terms_key[] = $this->format_glossary_term_string($spelling);
             }
@@ -193,7 +187,6 @@ class Linkify extends WPG_Linkify
                 $wpg_glossary_terms[$wpg_glossary_terms_key] = $glossary_term;
             }
         }
-
         $this->glossary_terms = $wpg_glossary_terms;
     }
 }

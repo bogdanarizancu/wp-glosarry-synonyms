@@ -51,6 +51,8 @@ class Plugin
     {
         $this->registerSynonymPostType();
 
+        add_filter('wpg_glossary_terms_query_args', array($this, 'querySynonyms'));
+
         new PostTypes();
 
         if (is_admin()) {
@@ -244,5 +246,11 @@ class Plugin
             return $associatedTerm->post_excerpt;
         }
         return $content;
+    }
+
+    public function querySynonyms($args)
+    {
+        $args['post_type'] = ['glossary', 'glossary-synonym'];
+        return $args;
     }
 }
