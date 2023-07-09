@@ -5,6 +5,7 @@
   Version: 1.0
   Text Domain: wp-glossary-synonyms
   Description: A custom plugin extension for WP Glossary plugin
+  Domain Path: /languages
   Author: Bogdan Arizancu
   Author URI: https://github.com/bogdanarizancu
   License: GPL-2.0+
@@ -13,12 +14,12 @@
 
 namespace WPGlossarySynonyms;
 
-use WPG_Linkify;
-
 if (!defined('ABSPATH')) {
     header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
     exit;
 }
+
+define('WPGS_PLUGIN_PATH', untrailingslashit(plugin_dir_path(__FILE__)));
 
 /**
  * Loads PSR-4-style plugin classes.
@@ -40,7 +41,11 @@ register_deactivation_hook(__FILE__, __NAMESPACE__ . '\Schema::deactivate');
 register_uninstall_hook(__FILE__, __NAMESPACE__ . '\Schema::uninstall');
 
 $plugin = new Plugin();
-add_action('plugins_loaded', [$plugin, 'loadTextdomain']);
+// add_action('plugins_loaded', [$plugin, 'loadTextdomain']);
+add_action('plugins_loaded', function () {
+    load_plugin_textdomain('wp-glossary-synonyms', false, basename(__DIR__) . '/languages/');
+});
+
 add_action('init', [$plugin, 'init'], 20);
 add_action('admin_init', [new Admin(), 'init']);
 

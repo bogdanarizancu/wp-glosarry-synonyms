@@ -10,6 +10,11 @@
 
 class Admin
 {
+    public function __construct()
+    {
+        add_action('admin_menu', array($this, 'extendMenu'));
+    }
+
     public function init()
     {
         // Save Meta box
@@ -58,5 +63,16 @@ class Admin
 
         $optionSections['section_linkify']['options'] = push_at_to_associative_array($optionSections['section_linkify']['options'], 'wpg_glossary_linkify_term_limit', $option);
         return $optionSections;
+    }
+
+    public function extendMenu()
+    {
+        add_submenu_page(
+            'edit.php?post_type=glossary',
+            __('Add New Synonym', 'wp-glossary-synonyms'),
+            __('Add New Synonym', 'wp-glossary-synonyms'),
+            'manage_options',
+            'post-new.php?post_type=' . PLugin::POST_TYPE
+        );
     }
 }

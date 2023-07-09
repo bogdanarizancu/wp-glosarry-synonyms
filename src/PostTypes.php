@@ -57,10 +57,10 @@ class PostTypes extends WPG_Post_Types
                 </tr>
                 
                 <tr>
-                    <th scope="row"><label for="<?php echo Plugin::ALTERNATIVE_SPELLINGS; ?>"><?php _e('Alternative spellings', WPG_TEXT_DOMAIN); ?></label></th>
+                    <th scope="row"><label for="<?php echo Plugin::ALTERNATIVE_SPELLINGS; ?>"><?php _e('Alternative spellings', 'wp-glossary-synonyms'); ?></label></th>
                     <td>
                         <input type="text" class="large-text" id="<?php echo Plugin::ALTERNATIVE_SPELLINGS; ?>" name="<?php echo Plugin::ALTERNATIVE_SPELLINGS; ?>" value="<?php echo get_post_meta($post->ID, Plugin::ALTERNATIVE_SPELLINGS, true); ?>" />
-                        <p class="description"><?php _e('You can define multiple comma separated spellings here.', WPG_TEXT_DOMAIN); ?></p>
+                        <p class="description"><?php _e('You can define multiple comma separated spellings here.', 'wp-glossary-synonyms'); ?></p>
                     </td>
                 </tr>
             </tbody>
