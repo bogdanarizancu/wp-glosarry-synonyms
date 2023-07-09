@@ -5,6 +5,7 @@
   Version: 1.0
   Text Domain: wp-glossary-synonyms
   Description: A custom plugin extension for WP Glossary plugin
+  Domain Path: /languages
   Author: Bogdan Arizancu
   Author URI: https://github.com/bogdanarizancu
   License: GPL-2.0+
@@ -17,6 +18,8 @@ if (!defined('ABSPATH')) {
     header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
     exit;
 }
+
+define('WPGS_PLUGIN_PATH', untrailingslashit(plugin_dir_path(__FILE__)));
 
 /**
  * Loads PSR-4-style plugin classes.
@@ -38,30 +41,17 @@ register_deactivation_hook(__FILE__, __NAMESPACE__ . '\Schema::deactivate');
 register_uninstall_hook(__FILE__, __NAMESPACE__ . '\Schema::uninstall');
 
 $plugin = new Plugin();
-add_action('plugins_loaded', [$plugin, 'loadTextdomain']);
+// add_action('plugins_loaded', [$plugin, 'loadTextdomain']);
+add_action('plugins_loaded', function () {
+    load_plugin_textdomain('wp-glossary-synonyms', false, basename(__DIR__) . '/languages/');
+});
+
 add_action('init', [$plugin, 'init'], 20);
 add_action('admin_init', [new Admin(), 'init']);
 
 if (file_exists(__DIR__ . '/vendor/autoload.php')) {
     require __DIR__ . '/vendor/autoload.php';
 }
-
-add_filter(
-    'wpg_settings',
-    function ($optionSections) {
-        $option = [
-        'wpg_glossary_linkify_synonym_limit' => [
-            'name' => 'wpg_glossary_linkify_synonym_limit',
-            'label' => 'Linkify Limit per Synonym',
-            'type' => 'number',
-            'desc' => 'Same as linkify limit for terms, but applied to synonyms.',
-        ]
-        ];
-
-        $optionSections['section_linkify']['options'] = push_at_to_associative_array($optionSections['section_linkify']['options'], 'wpg_glossary_linkify_term_limit', $option);
-        return $optionSections;
-    }
-);
 
 function push_at_to_associative_array($array, $key, $new)
 {

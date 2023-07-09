@@ -14,7 +14,7 @@ class Plugin
      *
      * @var string
      */
-    const PREFIX = 'wp-glossary-synonym';
+    const PREFIX = 'wp-glossary-synonyms';
 
     /**
      * Custom post type slug.
@@ -38,11 +38,24 @@ class Plugin
     const L10N = self::PREFIX;
 
     /**
+     * Alternative spellings post meta key.
+     *
+     * @var string
+     */
+    const ALTERNATIVE_SPELLINGS = 'alternative_spellings';
+
+    /**
      * Plugin initialization method.
      */
     public function init()
     {
         $this->registerSynonymPostType();
+
+        add_filter('wpg_glossary_terms_query_args', array($this, 'querySynonyms'));
+
+        new PostTypes();
+
+        add_action('admin_menu', array($this, 'hideTaxonomies'));
 
         if (is_admin()) {
             return;
@@ -87,44 +100,42 @@ class Plugin
      */
     public function loadTextdomain()
     {
-        load_plugin_textdomain(static::L10N, false, static::L10N . '/languages/');
+        load_plugin_textdomain(self::PREFIX, false, basename(__DIR__) . '/languages/');
     }
 
     public function registerSynonymPostType()
     {
         $labels = [
-            'name' => _x('Glosary synonym', 'post type general name', self::PREFIX),
-            'singular_name' => _x('Glosary synonym', 'post type singular name', self::PREFIX),
-            'menu_name' => _x('Glosary synonym', 'admin menu', self::PREFIX),
-            'name_admin_bar' => _x('Glosary synonym', 'add new on admin bar', self::PREFIX),
-            'add_new' => _x('Add New Synonym', 'glossary', self::PREFIX),
-            'add_new_item' => __('Add New Synonym', self::PREFIX),
-            'new_item' => __('New Synonym', self::PREFIX),
-            'edit_item' => __('Edit Synonym', self::PREFIX),
-            'view_item' => __('View Synonym', self::PREFIX),
-            'all_items' => __('All Synonyms', self::PREFIX),
-            'search_items' => __('Search Synonyms', self::PREFIX),
-            'parent_item_colon' => __('Parent Synonyms:', self::PREFIX),
-            'not_found' => __('No synonyms found.', self::PREFIX),
-            'not_found_in_trash' => __('No synonyms found in Trash.', self::PREFIX)
+            'name' => _x('Glosary synonym', 'post type general name', 'wp-glossary-synonyms'),
+            'singular_name' => _x('Glosary synonym', 'post type singular name', 'wp-glossary-synonyms'),
+            'menu_name' => _x('Glosary synonym', 'admin menu', 'wp-glossary-synonyms'),
+            'name_admin_bar' => _x('Glosary synonym', 'add new on admin bar', 'wp-glossary-synonyms'),
+            'add_new' => _x('Add New Synonym', 'glossary', 'wp-glossary-synonyms'),
+            'add_new_item' => __('Add New Synonym', 'wp-glossary-synonyms'),
+            'new_item' => __('New Synonym', 'wp-glossary-synonyms'),
+            'edit_item' => __('Edit Synonym', 'wp-glossary-synonyms'),
+            'view_item' => __('View Synonym', 'wp-glossary-synonyms'),
+            'all_items' => __('All Synonyms', 'wp-glossary-synonyms'),
+            'search_items' => __('Search Synonyms', 'wp-glossary-synonyms'),
+            'parent_item_colon' => __('Parent Synonyms:', 'wp-glossary-synonyms'),
+            'not_found' => __('No synonyms found.', 'wp-glossary-synonyms'),
+            'not_found_in_trash' => __('No synonyms found in Trash.', 'wp-glossary-synonyms')
         ];
 
         $args = apply_filters(
             'wpg_post_type_glossary_args',
             [
                 'labels' => $labels,
-                'description' => __('Description.', self::PREFIX),
+                'description' => __('Description.', 'wp-glossary-synonyms'),
                 'menu_icon' => 'dashicons-editor-spellcheck',
                 'capability_type' => 'post',
-                'rewrite' => [
-                    'slug' => self::POST_TYPE,
-                    'with_front' => false,
-                ],
-                'public' => true,
-                'publicly_queryable' => true,
+                'rewrite' => false,
+                'public' => false,
+                'publicly_queryable' => false,
                 'show_ui' => true,
                 'show_in_nav_menus' => false,
                 'show_in_menu' => 'edit.php?post_type=glossary',
+                // 'show_in_menu' => true,
                 'query_var' => true,
                 'has_archive' => false,
                 'hierarchical' => false,
@@ -141,7 +152,7 @@ class Plugin
     {
         add_meta_box(
             'meta-box-glossary-attributes',
-            __('Custom Attributes', WPG_TEXT_DOMAIN),
+            __('Custom Attributes', 'wp-glossary-synonyms'),
             [__CLASS__, 'meta_box_glossary_synonym_attributes'],
             self::POST_TYPE,
             'normal',
@@ -158,7 +169,7 @@ class Plugin
             <tbody>
                 <tr>
                     <th scope="row"><label for="associated_glossary_term">
-                            <?php _e('Associated glossary term', self::PREFIX); ?>
+                            <?php _e('Associated glossary term', 'wp-glossary-synonyms'); ?>
                         </label></th>
                     <td>
                         <?php
@@ -186,12 +197,12 @@ class Plugin
 
                 <tr>
                     <th scope="row"><label for="spellings">
-                            <?php _e('Spelings', self::PREFIX); ?>
+                            <?php _e('Alternative spellings', 'wp-glossary-synonyms'); ?>
                         </label></th>
                     <td>
-                        <input type="text" class="large-text" name="synonym_spellings" value="<?php echo esc_attr(get_post_meta($post->ID, 'synonym_spellings', true)); ?>" />
+                        <input type="text" class="large-text" name="<?php echo Plugin::ALTERNATIVE_SPELLINGS; ?>" value="<?php echo esc_attr(get_post_meta($post->ID, Plugin::ALTERNATIVE_SPELLINGS, true)); ?>" />
                         <p class="description">
-                            <?php _e('You can define multiple comma separated spelings here.', self::PREFIX); ?>
+                            <?php _e('You can define multiple comma separated spellings here', 'wp-glossary-synonyms'); ?>
                         </p>
                     </td>
                 </tr>
@@ -235,5 +246,17 @@ class Plugin
             return $associatedTerm->post_excerpt;
         }
         return $content;
+    }
+
+    public function querySynonyms($args)
+    {
+        $args['post_type'] = ['glossary', 'glossary-synonym'];
+        return $args;
+    }
+
+    public function hideTaxonomies()
+    {
+        remove_submenu_page('edit.php?post_type=glossary', 'edit-tags.php?taxonomy=glossary_cat&amp;post_type=glossary');
+        remove_submenu_page('edit.php?post_type=glossary', 'edit-tags.php?taxonomy=glossary_tag&amp;post_type=glossary');
     }
 }

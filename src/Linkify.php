@@ -1,7 +1,8 @@
 <?php
 
 /**
- * Linkify Content
+ * This overwrites the parent's main class, adding the synonym custom post type
+ * to the filter query and alternative spellings functionality.
  *
  * @class WPG_Linkify
  */
@@ -57,7 +58,6 @@ class Linkify extends WPG_Linkify
      */
     public function setup_vars()
     {
-
         $this->is_active = wpg_glossary_is_linkify();
         if (!$this->is_active) {
             return;
@@ -117,9 +117,7 @@ class Linkify extends WPG_Linkify
                 ),
             )
         );
-        add_filter('wpg_glossary_terms_query_args', array($this, 'querySynonyms'));
         $this->glossary_terms = wpg_glossary_terms('linkify');
-        remove_filter('wpg_glossary_terms_query_args', array($this, 'querySynonyms'));
         if (empty($this->glossary_terms)) {
             return;
         }
@@ -141,9 +139,54 @@ class Linkify extends WPG_Linkify
         $this->is_term_limit_for_full_page = wpg_glossary_is_linkify_limit_for_full_page();
     }
 
-    public function querySynonyms($args)
+    /**
+     * Format Glossary Terms Array
+     *
+     * Overwrites parent's method to allow linkifying spellings using the separate
+     *  post meta field.
+     */
+    public function format_glossary_terms()
     {
-        $args['post_type'] = 'glossary-synonym';
-        return $args;
+        $wpg_glossary_terms = array();
+        global $post;
+
+        foreach ($this->glossary_terms as $glossary_term) {
+
+            /**
+             * This remains commented out.
+             */
+            //if ($post->ID === $glossary_term->ID) {
+                // continue;
+            //}
+
+            $wpg_glossary_terms_key = array();
+
+            // Term Title
+            $wpg_glossary_terms_key[] = $this->format_glossary_term_string($glossary_term->post_title);
+
+            /**
+             * Taking out the tags functionality since we are using spellings instead.
+             */
+            // // Term Tags
+            // if ($this->is_linkify_tags && !empty($glossary_term->terms)) {
+            //  foreach ($glossary_term->terms as $key => $term) {
+            //      $wpg_glossary_terms_key[] = $this->format_glossary_term_string($term);
+            //  }
+            // }
+
+            // Spellings post meta.
+            $spellings = array_filter(explode(',', get_post_meta($glossary_term->ID, Plugin::ALTERNATIVE_SPELLINGS, true)));
+
+            foreach ($spellings as $spelling) {
+                $wpg_glossary_terms_key[] = $this->format_glossary_term_string($spelling);
+            }
+
+            $wpg_glossary_terms_key = implode("|", $wpg_glossary_terms_key);
+
+            if (!isset($wpg_glossary_terms[$wpg_glossary_terms_key])) {
+                $wpg_glossary_terms[$wpg_glossary_terms_key] = $glossary_term;
+            }
+        }
+        $this->glossary_terms = $wpg_glossary_terms;
     }
 }
