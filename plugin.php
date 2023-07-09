@@ -13,6 +13,8 @@
 
 namespace WPGlossarySynonyms;
 
+use WPG_Linkify;
+
 if (!defined('ABSPATH')) {
     header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
     exit;
