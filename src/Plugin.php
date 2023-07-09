@@ -127,12 +127,9 @@ class Plugin
                 'description' => __('Description.', self::PREFIX),
                 'menu_icon' => 'dashicons-editor-spellcheck',
                 'capability_type' => 'post',
-                'rewrite' => [
-                    'slug' => self::POST_TYPE,
-                    'with_front' => false,
-                ],
-                'public' => true,
-                'publicly_queryable' => true,
+                'rewrite' => false,
+                'public' => false,
+                'publicly_queryable' => false,
                 'show_ui' => true,
                 'show_in_nav_menus' => false,
                 'show_in_menu' => 'edit.php?post_type=glossary',
@@ -202,7 +199,7 @@ class Plugin
                     <td>
                         <input type="text" class="large-text" name="<?php echo Plugin::ALTERNATIVE_SPELLINGS; ?>" value="<?php echo esc_attr(get_post_meta($post->ID, Plugin::ALTERNATIVE_SPELLINGS, true)); ?>" />
                         <p class="description">
-                            <?php _e('You can define multiple comma separated spelings here.', self::PREFIX); ?>
+                            <?php _e('You can define multiple comma separated spellings here.', self::PREFIX); ?>
                         </p>
                     </td>
                 </tr>

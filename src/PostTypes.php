@@ -60,7 +60,7 @@ class PostTypes extends WPG_Post_Types
                     <th scope="row"><label for="<?php echo Plugin::ALTERNATIVE_SPELLINGS; ?>"><?php _e('Alternative spellings', WPG_TEXT_DOMAIN); ?></label></th>
                     <td>
                         <input type="text" class="large-text" id="<?php echo Plugin::ALTERNATIVE_SPELLINGS; ?>" name="<?php echo Plugin::ALTERNATIVE_SPELLINGS; ?>" value="<?php echo get_post_meta($post->ID, Plugin::ALTERNATIVE_SPELLINGS, true); ?>" />
-                        <p class="description"><?php _e('This option allows you to use external URL for current glossary term. This option is usefull when you want user to redirect on wikipedia or some other dictionary URL for this particular term rather than having complete description on your website.', WPG_TEXT_DOMAIN); ?></p>
+                        <p class="description"><?php _e('You can define multiple comma separated spellings here.', WPG_TEXT_DOMAIN); ?></p>
                     </td>
                 </tr>
             </tbody>
