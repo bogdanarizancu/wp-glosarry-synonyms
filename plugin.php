@@ -43,7 +43,7 @@ register_uninstall_hook(__FILE__, __NAMESPACE__ . '\Schema::uninstall');
 add_action('plugins_loaded', function () {
     load_plugin_textdomain('wp-glossary-synonyms', false, basename(__DIR__) . '/languages/');
 });
-add_action('init', [(new PLugin()), 'init'], 20);
+add_action('init', [(new Plugin()), 'init'], 20);
 add_action('admin_init', [new Admin(), 'init']);
 
 // Load composer dependencies, only for dev environment for formatting the code.
