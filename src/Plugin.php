@@ -72,7 +72,7 @@ class Plugin
         new Linkify();
 
         // Replace synonyms permalink with parent glossary term permalink, as requested
-        add_filter('post_type_link', array($this, 'replacePermalink'), 10, 2);
+        add_filter('post_type_link', array($this, 'maybeReplacePermalink'), 10, 2);
 
         // Get parent post excerpt if synonym excerpt is empty
         add_filter('wpg_tooltip_excerpt', array($this, 'maybeReplaceExcerpt'));
@@ -98,8 +98,10 @@ class Plugin
 
     private function getAssociatedTerm($synonymID)
     {
-        $associatedTermID = get_post_meta($synonymID, self::ASSOCIATED_TERM, true);
-        return get_post($associatedTermID);
+        if ($associatedTermID = get_post_meta($synonymID, self::ASSOCIATED_TERM, true)) {
+            return get_post($associatedTermID);
+        }
+        return null;
     }
 
     /**
@@ -240,14 +242,12 @@ class Plugin
         return '<p>' . implode(', ', $synonyms) . '</p>';
     }
 
-    public function replacePermalink($permalink, $post)
+    public function maybeReplacePermalink($permalink, $post)
     {
-        if ($post->post_type !== self::POST_TYPE) {
-            return $permalink;
+        if ($post->post_type === self::POST_TYPE && $associatedTerm = $this->getAssociatedTerm($post->ID)) {
+            return get_permalink($associatedTerm);
         }
-        $associatedTerm = $this->getAssociatedTerm($post->ID);
-
-        return $associatedTerm ? get_permalink($associatedTerm) : $permalink;
+        return $permalink;
     }
 
     public function maybeReplaceExcerpt($content)
@@ -255,7 +255,9 @@ class Plugin
         global $post;
         if ($post->post_type === self::POST_TYPE && empty($post->post_excerpt)) {
             $associatedTerm = $this->getAssociatedTerm($post->ID);
-            return $associatedTerm->post_excerpt;
+            if ($associatedTerm) {
+                return $associatedTerm->post_excerpt;
+            }
         }
         return $content;
     }
