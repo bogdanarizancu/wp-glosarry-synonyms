@@ -72,19 +72,16 @@ class Plugin
         new Linkify();
 
         // Replace synonyms permalink with parent glossary term permalink, as requested
-        add_filter('post_type_link', array($this, 'replacePermalink'), 10, 2);
+        add_filter('post_type_link', array($this, 'maybeReplacePermalink'), 10, 2);
 
         // Get parent post excerpt if synonym excerpt is empty
         add_filter('wpg_tooltip_excerpt', array($this, 'maybeReplaceExcerpt'));
 
+        // Load plugin js
+        add_action('wp_enqueue_scripts', array($this, 'loadScript'));
+
         //  Custom functionality for sysnonyms to show the parent term title in brackets.
-        add_filter('wpg_tooltip_term_title_end', function ($title) {
-            $postID = get_the_ID();
-            if (get_post_type($postID) === self::POST_TYPE && $associatedTerm = $this->getAssociatedTerm($postID)) {
-                return ' <br/><a style="color: inherit;" class="main-term" href="' . get_permalink($associatedTerm) . '">(' . $associatedTerm->post_title . ')</a>' . $title;
-            }
-            return $title;
-        }, 10, 2);
+        add_filter('wpg_tooltip_term_title_end', array($this, 'alterTootltipSynonymTitle'), 10, 2);
 
         // Include sysnonym post type in frontend query.
         add_filter('wpg_list_query_args', function ($args) {
@@ -94,20 +91,26 @@ class Plugin
 
         // Add shortcode functionliaty to list all synonyms, comma separated.
         add_shortcode('wpgs_list', array($this, 'setShortcode'));
+
+        // Search by sppelings.
+        add_filter('wpg_list_item_start', array($this, 'addSpellingsAttributeToListItem'));
+    }
+
+    public function alterTootltipSynonymTitle($title)
+    {
+        $postID = get_the_ID();
+        if (get_post_type($postID) === self::POST_TYPE && $associatedTerm = $this->getAssociatedTerm($postID)) {
+            return ' <br/><a style="color: inherit;" class="main-term" href="' . get_permalink($associatedTerm) . '">(' . $associatedTerm->post_title . ')</a>' . $title;
+        }
+        return $title;
     }
 
     private function getAssociatedTerm($synonymID)
     {
-        $associatedTermID = get_post_meta($synonymID, self::ASSOCIATED_TERM, true);
-        return get_post($associatedTermID);
-    }
-
-    /**
-     * Loads the plugin textdomain.
-     */
-    public function loadTextdomain()
-    {
-        load_plugin_textdomain(self::PREFIX, false, basename(__DIR__) . '/languages/');
+        if ($associatedTermID = get_post_meta($synonymID, self::ASSOCIATED_TERM, true)) {
+            return get_post($associatedTermID);
+        }
+        return null;
     }
 
     public function registerSynonymPostType()
@@ -240,14 +243,12 @@ class Plugin
         return '<p>' . implode(', ', $synonyms) . '</p>';
     }
 
-    public function replacePermalink($permalink, $post)
+    public function maybeReplacePermalink($permalink, $post)
     {
-        if ($post->post_type !== self::POST_TYPE) {
-            return $permalink;
+        if ($post->post_type === self::POST_TYPE && $associatedTerm = $this->getAssociatedTerm($post->ID)) {
+            return get_permalink($associatedTerm);
         }
-        $associatedTerm = $this->getAssociatedTerm($post->ID);
-
-        return $associatedTerm ? get_permalink($associatedTerm) : $permalink;
+        return $permalink;
     }
 
     public function maybeReplaceExcerpt($content)
@@ -255,7 +256,9 @@ class Plugin
         global $post;
         if ($post->post_type === self::POST_TYPE && empty($post->post_excerpt)) {
             $associatedTerm = $this->getAssociatedTerm($post->ID);
-            return $associatedTerm->post_excerpt;
+            if ($associatedTerm) {
+                return $associatedTerm->post_excerpt;
+            }
         }
         return $content;
     }
@@ -270,5 +273,23 @@ class Plugin
     {
         remove_submenu_page('edit.php?post_type=glossary', 'edit-tags.php?taxonomy=glossary_cat&amp;post_type=glossary');
         remove_submenu_page('edit.php?post_type=glossary', 'edit-tags.php?taxonomy=glossary_tag&amp;post_type=glossary');
+    }
+
+    public function loadScript()
+    {
+        wp_enqueue_script('wpgs-script', plugins_url('assets/main.js', __DIR__), array('jquery'));
+    }
+
+    public function addSpellingsAttributeToListItem($markup)
+    {
+        global $post;
+        if ($spellings = get_post_meta($post->ID, self::ALTERNATIVE_SPELLINGS, true)) {
+            $spellings = array_map(function ($spelling) {
+                return trim($spelling);
+            }, explode(',', strtolower($spellings)));
+            $markup = rtrim($markup, '>') . ' data-spellings="' . implode('|', $spellings) . '">';
+            return $markup;
+        }
+        return $markup;
     }
 }
