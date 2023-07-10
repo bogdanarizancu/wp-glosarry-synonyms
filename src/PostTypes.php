@@ -66,4 +66,44 @@ class PostTypes extends WPG_Post_Types
             </tbody>
         </table><?php
     }
+
+    /**
+     * Save Custom Meta Boxes
+     */
+    public static function save_meta_boxes($post_id)
+    {
+        if (!isset($_POST['wpg_meta_box_nonce'])) {
+            return $post_id;
+        }
+
+        if (!wp_verify_nonce($_POST['wpg_meta_box_nonce'], 'wpg_meta_box')) {
+            return $post_id;
+        }
+
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+            return $post_id;
+        }
+
+        if ('page' == $_POST['post_type']) {
+            if (!current_user_can('edit_page', $post_id)) {
+                return $post_id;
+            }
+        } else {
+            if (!current_user_can('edit_post', $post_id)) {
+                return $post_id;
+            }
+        }
+
+        if (isset($_POST['custom_post_title'])) {
+            update_post_meta($post_id, 'custom_post_title', sanitize_text_field($_POST['custom_post_title']));
+        }
+
+        if (isset($_POST['custom_post_permalink'])) {
+            update_post_meta($post_id, 'custom_post_permalink', $_POST['custom_post_permalink']);
+        }
+
+        if (isset($_POST[Plugin::ALTERNATIVE_SPELLINGS])) {
+            update_post_meta($post_id, Plugin::ALTERNATIVE_SPELLINGS, $_POST[Plugin::ALTERNATIVE_SPELLINGS]);
+        }
+    }
 }

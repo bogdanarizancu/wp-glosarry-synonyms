@@ -162,7 +162,7 @@ class Plugin
 
     public static function meta_box_glossary_synonym_attributes($post)
     {
-        wp_nonce_field('wpgs_meta_box', 'wpgs_meta_box_nonce');
+        wp_nonce_field('wpg_meta_box', 'wpg_meta_box_nonce');
 
         ?>
         <table class="form-table">
@@ -200,9 +200,14 @@ class Plugin
                             <?php _e('Alternative spellings', 'wp-glossary-synonyms'); ?>
                         </label></th>
                     <td>
-                        <input type="text" class="large-text" name="<?php echo Plugin::ALTERNATIVE_SPELLINGS; ?>" value="<?php echo esc_attr(get_post_meta($post->ID, Plugin::ALTERNATIVE_SPELLINGS, true)); ?>" />
+                        <input 
+                            type="text" 
+                            class="large-text" 
+                            name="<?php echo Plugin::ALTERNATIVE_SPELLINGS; ?>" 
+                            value="<?php echo esc_attr(get_post_meta($post->ID, Plugin::ALTERNATIVE_SPELLINGS, true)); ?>" 
+                        />
                         <p class="description">
-                            <?php _e('You can define multiple comma separated spellings here', 'wp-glossary-synonyms'); ?>
+                            <?php _e('You can define multiple comma separated spellings here.', 'wp-glossary-synonyms'); ?>
                         </p>
                     </td>
                 </tr>
