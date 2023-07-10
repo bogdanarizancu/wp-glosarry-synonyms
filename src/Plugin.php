@@ -45,6 +45,13 @@ class Plugin
     const ALTERNATIVE_SPELLINGS = 'alternative_spellings';
 
     /**
+     * Alternative spellings post meta key.
+     *
+     * @var string
+     */
+    const ASSOCIATED_TERM = 'associated_term';
+
+    /**
      * Plugin initialization method.
      */
     public function init()
@@ -91,7 +98,7 @@ class Plugin
 
     private function getAssociatedTerm($synonymID)
     {
-        $associatedTermID = get_post_meta($synonymID, 'associated_term', true);
+        $associatedTermID = get_post_meta($synonymID, self::ASSOCIATED_TERM, true);
         return get_post($associatedTermID);
     }
 
@@ -179,12 +186,12 @@ class Plugin
                          * fake it to be hierarchical and revert after dropdown output.
                          */
                         global $wp_post_types;
-                        $selected_post_id = get_post_meta($post->ID, 'associated_term', true);
+                        $selected_post_id = get_post_meta($post->ID, self::ASSOCIATED_TERM, true);
                         $save_hierarchical = $wp_post_types[self::PARENT_POST_TYPE]->hierarchical;
                         $wp_post_types[self::PARENT_POST_TYPE]->hierarchical = true;
                         wp_dropdown_pages(
                             array(
-                                'name' => 'associated_term',
+                                'name' => Plugin::ASSOCIATED_TERM,
                                 'selected' => empty($selected_post_id) ? 0 : $selected_post_id,
                                 'post_type' => self::PARENT_POST_TYPE,
                                 'show_option_none' => 'None selected',
@@ -226,7 +233,7 @@ class Plugin
             'order' => 'ASC'
         );
         if (!empty($args['term_id'])) {
-            $query_args['meta_key'] = 'associated_term';
+            $query_args['meta_key'] = self::ASSOCIATED_TERM;
             $query_args['meta_value'] = $args['term_id'];
         }
         $synonyms = wp_list_pluck(get_posts($query_args), 'post_title');

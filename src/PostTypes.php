@@ -105,5 +105,9 @@ class PostTypes extends WPG_Post_Types
         if (isset($_POST[Plugin::ALTERNATIVE_SPELLINGS])) {
             update_post_meta($post_id, Plugin::ALTERNATIVE_SPELLINGS, $_POST[Plugin::ALTERNATIVE_SPELLINGS]);
         }
+
+        if (isset($_POST[Plugin::ASSOCIATED_TERM])) {
+            update_post_meta($post_id, Plugin::ASSOCIATED_TERM, $_POST[Plugin::ASSOCIATED_TERM]);
+        }
     }
 }
