@@ -61,7 +61,7 @@ class Admin
             ]
         ];
 
-        $optionSections['section_linkify']['options'] = push_at_to_associative_array($optionSections['section_linkify']['options'], 'wpg_glossary_linkify_term_limit', $option);
+        $optionSections['section_linkify']['options'] = $this->pushAssociativeArray($optionSections['section_linkify']['options'], 'wpg_glossary_linkify_term_limit', $option);
         return $optionSections;
     }
 
@@ -74,5 +74,14 @@ class Admin
             'manage_options',
             'post-new.php?post_type=' . PLugin::POST_TYPE
         );
+    }
+
+    private function pushAssociativeArray($array, $key, $new)
+    {
+        $keys = array_keys($array);
+        $index = array_search($key, $keys, true);
+        $pos = false === $index ? count($array) : $index + 1;
+        $array = array_slice($array, 0, $pos, true) + $new + array_slice($array, $pos, count($array) - 1, true);
+        return $array;
     }
 }

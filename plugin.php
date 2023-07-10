@@ -19,8 +19,6 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('WPGS_PLUGIN_PATH', untrailingslashit(plugin_dir_path(__FILE__)));
-
 /**
  * Loads PSR-4-style plugin classes.
  */
@@ -36,29 +34,19 @@ function classloader($class)
 }
 spl_autoload_register(__NAMESPACE__ . '\classloader');
 
+// Activation hooks
 register_activation_hook(__FILE__, __NAMESPACE__ . '\Schema::activate');
 register_deactivation_hook(__FILE__, __NAMESPACE__ . '\Schema::deactivate');
 register_uninstall_hook(__FILE__, __NAMESPACE__ . '\Schema::uninstall');
 
-$plugin = new Plugin();
-// add_action('plugins_loaded', [$plugin, 'loadTextdomain']);
+// Initialise plugin classes
 add_action('plugins_loaded', function () {
     load_plugin_textdomain('wp-glossary-synonyms', false, basename(__DIR__) . '/languages/');
 });
-
-add_action('init', [$plugin, 'init'], 20);
+add_action('init', [(new PLugin()), 'init'], 20);
 add_action('admin_init', [new Admin(), 'init']);
 
+// Load composer dependencies, only for dev environment for formatting the code.
 if (file_exists(__DIR__ . '/vendor/autoload.php')) {
     require __DIR__ . '/vendor/autoload.php';
-}
-
-function push_at_to_associative_array($array, $key, $new)
-{
-    $keys = array_keys($array);
-    $index = array_search($key, $keys, true);
-    $pos = false === $index ? count($array) : $index + 1;
-
-    $array = array_slice($array, 0, $pos, true) + $new + array_slice($array, $pos, count($array) - 1, true);
-    return $array;
 }
