@@ -94,6 +94,11 @@ class Plugin
 
         // Search by sppelings.
         add_filter('wpg_list_item_start', array($this, 'addSpellingsAttributeToListItem'));
+
+        // Remove automatic paragraph tag from glossary tooltip content.
+        add_filter('wpg_glossary_tooltip_content', function ($html) {
+            return str_replace(['&lt;p&gt;','&lt;/p&gt;'], '', $html);
+        });
     }
 
     public function alterTootltipSynonymTitle($title)
@@ -240,7 +245,7 @@ class Plugin
             $query_args['meta_value'] = $args['term_id'];
         }
         $synonyms = wp_list_pluck(get_posts($query_args), 'post_title');
-        return '<p>' . implode(', ', $synonyms) . '</p>';
+        return implode(', ', $synonyms);
     }
 
     public function maybeReplacePermalink($permalink, $post)
