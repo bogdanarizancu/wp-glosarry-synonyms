@@ -58,8 +58,6 @@ class Plugin
     {
         $this->registerSynonymPostType();
 
-        add_filter('wpg_glossary_terms_query_args', array($this, 'querySynonyms'));
-
         new PostTypes();
 
         add_action('admin_menu', array($this, 'hideTaxonomies'));
@@ -67,6 +65,12 @@ class Plugin
         if (is_admin()) {
             return;
         }
+
+        // Process terms and synonyms for linkifying content.
+        add_filter('wpg_glossary_terms_query_args', array($this, 'querySynonyms'));
+
+        // Include sysnonym post type in frontend search query.
+        add_filter('wpg_list_query_args', array($this, 'querySynonyms'));
 
         // Instantiate class only for frontend, since that is where the limit counter is used.
         new Linkify();
@@ -82,12 +86,6 @@ class Plugin
 
         //  Custom functionality for sysnonyms to show the parent term title in brackets.
         add_filter('wpg_tooltip_term_title_end', array($this, 'alterTootltipSynonymTitle'), 10, 2);
-
-        // Include sysnonym post type in frontend query.
-        add_filter('wpg_list_query_args', function ($args) {
-            $args['post_type'] = [$args['post_type'], self::POST_TYPE];
-            return $args;
-        });
 
         // Add shortcode functionliaty to list all synonyms, comma separated.
         add_shortcode('wpgs_list', array($this, 'setShortcode'));

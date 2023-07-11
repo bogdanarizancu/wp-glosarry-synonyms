@@ -9,10 +9,6 @@
 
 namespace WPGlossarySynonyms;
 
-if (!class_exists('WPG_Linkify')) {
-    die('Could not find or load class WPG_Linkify from parent plugin.');
-}
-
 use WPG_Linkify;
 
 class Linkify extends WPG_Linkify
@@ -28,7 +24,8 @@ class Linkify extends WPG_Linkify
     public $linkify_sections = '';
     public $linkify_post_types = '';
     public $is_on_front_page = '';
-    public $term_limit = '';
+    public $term_limit = 0;
+    public $synonym_limit = 0;
     public $is_term_limit_for_full_page = '';
     public $is_case_sensitive = '';
     public $is_tooltip = '';
@@ -36,9 +33,12 @@ class Linkify extends WPG_Linkify
     public $is_tooltip_content_read_more = '';
     public $disabled_linkify_on_posts = array();
     public $disabled_tooltip_on_posts = array();
-    public $glossary_terms = '';
-    public $glossary_term_titles = '';
+    public $glossary_terms = array();
+    public $glossary_term_titles = array();
     public $replaced_terms = array();
+    public $replaced_synonyms = array();
+    public $term_spellings = array();
+    public $synonym_spellings = array();
 
     /**
      * Constructor
@@ -47,9 +47,7 @@ class Linkify extends WPG_Linkify
      */
     public function __construct()
     {
-        // Setup Linkify Vars
         add_action('wp', array($this, 'setup_vars'));
-        // Initiate Linkify
         add_action('wp', array($this, 'init_linkify'));
     }
 
@@ -135,7 +133,8 @@ class Linkify extends WPG_Linkify
         $this->is_new_tab = wpg_glossary_is_linkify_new_tab();
         $this->is_disable_link = wpg_glossary_is_linkify_disable_link();
         $this->linkify_post_types = wpg_glossary_get_linkify_post_types();
-        $this->term_limit = get_option('wpg_glossary_linkify_synonym_limit') ?: -1;
+        $this->term_limit = get_option('wpg_glossary_linkify_term_limit') ?: -1;
+        $this->synonym_limit = get_option('wpg_glossary_linkify_synonym_limit') ?: -1;
         $this->is_term_limit_for_full_page = wpg_glossary_is_linkify_limit_for_full_page();
     }
 
@@ -143,7 +142,7 @@ class Linkify extends WPG_Linkify
      * Format Glossary Terms Array
      *
      * Overwrites parent's method to allow linkifying spellings using the separate
-     *  post meta field.
+     * post meta field.
      */
     public function format_glossary_terms()
     {
@@ -161,7 +160,6 @@ class Linkify extends WPG_Linkify
 
             $wpg_glossary_terms_key = array();
 
-            // Term Title
             $wpg_glossary_terms_key[] = $this->format_glossary_term_string($glossary_term->post_title);
 
             /**
@@ -176,7 +174,6 @@ class Linkify extends WPG_Linkify
 
             // Spellings post meta.
             $spellings = array_filter(explode(',', get_post_meta($glossary_term->ID, Plugin::ALTERNATIVE_SPELLINGS, true)));
-
             foreach ($spellings as $spelling) {
                 $wpg_glossary_terms_key[] = $this->format_glossary_term_string($spelling);
             }
@@ -186,7 +183,144 @@ class Linkify extends WPG_Linkify
             if (!isset($wpg_glossary_terms[$wpg_glossary_terms_key])) {
                 $wpg_glossary_terms[$wpg_glossary_terms_key] = $glossary_term;
             }
+
+            // Collect available spellings
+            if ($glossary_term->post_type === Plugin::PARENT_POST_TYPE) {
+                $this->term_spellings = array_merge($this->term_spellings, $spellings);
+            }
+            if ($glossary_term->post_type === Plugin::POST_TYPE) {
+                $this->synonym_spellings = array_merge($this->synonym_spellings, $spellings);
+            }
         }
+
         $this->glossary_terms = $wpg_glossary_terms;
+    }
+
+    /**
+     * Init Linkify
+     */
+    public function init_linkify()
+    {
+        // Check if Linkify is enabled or not
+        if (!$this->is_active) {
+            return;
+        }
+
+        if (empty($this->linkify_sections)) {
+            return;
+        }
+
+        if (empty($this->glossary_terms)) {
+            return;
+        }
+
+        // Linkify Full Description
+        if (in_array('post_content', $this->linkify_sections)) {
+            if (!wpg_glossary_is_bp_page()) {
+                remove_filter('the_content', array('WPG_Linkify', 'linkify_content'), 13, 2);
+                add_filter('the_content', array($this, 'linkify_content'), 13, 2);
+            }
+        }
+
+        // Linkify Short Description
+        if (in_array('post_excerpt', $this->linkify_sections)) {
+            add_filter('the_excerpt', array($this, 'linkify_content'), 13, 2);
+        }
+
+        // Linkify Categories / Terms Description
+        if (in_array('term_content', $this->linkify_sections)) {
+            add_filter('term_description', array($this, 'linkify_term_content'), 13, 2);
+        }
+
+        // Linkify Widget
+        if (in_array('widget', $this->linkify_sections)) {
+            add_filter('widget_text', array($this, 'linkify_widget'), 13, 2);
+        }
+
+        // Linkify Comment
+        if (in_array('comment', $this->linkify_sections)) {
+            add_filter('get_comment_text', array($this, 'linkify_comment'), 13, 2);
+            add_filter('get_comment_excerpt', array($this, 'linkify_comment'), 13, 2);
+        }
+    }
+
+    /**
+     * Replace Matching Terms
+     */
+    public function preg_replace_matches($match)
+    {
+        if (!empty($match[0])) {
+            $title = htmlspecialchars_decode($match[0], ENT_COMPAT);
+            $glossary_term = array();
+            if (!empty($this->glossary_terms)) {
+                $title_index = $this->format_glossary_term_string($title);
+                // First - look for exact keys
+                if (array_key_exists($title_index, $this->glossary_terms)) {
+                    $glossary_term = $this->glossary_terms[$title_index];
+                } else {
+                    // If not found - try the tags
+                    foreach ($this->glossary_terms as $key => $value) {
+                        if (strstr($key, '|') && strstr($key, $title_index)) {
+                            $glossary_term_tags = explode('|', $key);
+                            if (in_array($title_index, $glossary_term_tags)) {
+                                $glossary_term = $value;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!empty($glossary_term)) {
+                if (
+                    ($glossary_term->post_type === Plugin::POST_TYPE && $this->synonym_limit > 0) ||
+                    ($glossary_term->post_type === Plugin::PARENT_POST_TYPE && $this->term_limit > 0)
+                ) {
+                    if (
+                        $glossary_term->post_type === Plugin::POST_TYPE ||
+                        in_array($title, $this->synonym_spellings)
+                    ) {
+                        $this->replaced_synonyms[$glossary_term->ID] = (isset($this->replaced_synonyms[$glossary_term->ID]) && $this->replaced_synonyms[$glossary_term->ID] > 0) ? ($this->replaced_synonyms[$glossary_term->ID] + 1) : 1;
+                    } elseif (
+                        $glossary_term->post_type === Plugin::PARENT_POST_TYPE ||
+                        in_array($title, $this->term_spellings)
+                    ) {
+                        $this->replaced_terms[$glossary_term->ID] = (isset($this->replaced_terms[$glossary_term->ID]) && $this->replaced_terms[$glossary_term->ID] > 0) ? ($this->replaced_terms[$glossary_term->ID] + 1) : 1;
+                    }
+                    if (
+                        ($glossary_term->post_type === Plugin::POST_TYPE && $this->replaced_synonyms[$glossary_term->ID] > $this->synonym_limit) ||
+                        ($glossary_term->post_type === Plugin::PARENT_POST_TYPE && $this->replaced_terms[$glossary_term->ID] > $this->term_limit)
+                    ) {
+                        return $title;
+                    }
+                }
+
+                global $post;
+                $current_post = $post;
+                $post = $glossary_term;
+                setup_postdata($post);
+
+                $title_place_holder = '##TITLE_GOES_HERE##';
+
+                if ($this->is_disable_link) {
+                    $href = '';
+                } else {
+                    $href = 'href="' . esc_url(get_permalink()) . '"';
+                }
+
+                if ($this->is_tooltip && !(!empty($this->disabled_tooltip_on_posts) && isset($current_post->ID) && in_array($current_post->ID, $this->disabled_tooltip_on_posts))) {
+                    $attr_title = wpg_glossary_get_tooltip_content($this->is_tooltip_content_shortcode, $this->is_tooltip_content_read_more);
+
+                    $new_text = '<a class="wpg-linkify wpg-tooltip" title="' . $attr_title . '" ' . $href . ' ' . ($this->is_new_tab ? 'target="_blank"' : '') . '>' . $title_place_holder . '</a>';
+                } else {
+                    $new_text = '<a class="wpg-linkify" ' . $href . ' ' . ($this->is_new_tab ? 'target="_blank"' : '') . '>' . $title_place_holder . '</a>';
+                }
+
+                wp_reset_postdata();
+
+                $new_text = str_replace($title_place_holder, $title, $new_text);
+                return $new_text;
+            }
+        }
     }
 }

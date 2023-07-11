@@ -9,10 +9,6 @@
 
 namespace WPGlossarySynonyms;
 
-if (!class_exists('WPG_Post_Types')) {
-    die('Could not find or load class WPG_Post_Types from parent plugin.');
-}
-
 use WPG_Post_Types;
 
 class PostTypes extends WPG_Post_Types
