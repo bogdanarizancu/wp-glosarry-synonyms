@@ -72,7 +72,7 @@ class Admin
             __('Add New Synonym', 'wp-glossary-synonyms'),
             __('Add New Synonym', 'wp-glossary-synonyms'),
             'manage_options',
-            'post-new.php?post_type=' . PLugin::POST_TYPE
+            'post-new.php?post_type=' . Plugin::POST_TYPE
         );
     }
 

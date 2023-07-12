@@ -46,7 +46,7 @@ add_action('plugins_loaded', function () {
     // taking into account spellings count limit.
     remove_class_action('wp', 'init_linkify', 'WPG_Linkify');
 });
-add_action('init', [(new PLugin()), 'init'], 20);
+add_action('init', [(new Plugin()), 'init'], 20);
 add_action('admin_init', [new Admin(), 'init']);
 
 // Load composer dependencies, only for dev environment for formatting the code.
