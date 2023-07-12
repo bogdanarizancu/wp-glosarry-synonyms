@@ -45,6 +45,7 @@ add_action('plugins_loaded', function () {
     // Prevent original plugin from init linkify, since this has its own rules,
     // taking into account spellings count limit.
     remove_class_action('wp', 'init_linkify', 'WPG_Linkify');
+    remove_class_action('wp', 'setup_vars', 'WPG_Linkify');
 });
 add_action('init', [(new Plugin()), 'init'], 20);
 add_action('admin_init', [new Admin(), 'init']);

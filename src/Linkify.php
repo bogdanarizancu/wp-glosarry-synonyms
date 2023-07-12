@@ -217,7 +217,6 @@ class Linkify extends WPG_Linkify
         // Linkify Full Description
         if (in_array('post_content', $this->linkify_sections)) {
             if (!wpg_glossary_is_bp_page()) {
-                remove_filter('the_content', array('WPG_Linkify', 'linkify_content'), 13, 2);
                 add_filter('the_content', array($this, 'linkify_content'), 13, 2);
             }
         }
@@ -241,6 +240,93 @@ class Linkify extends WPG_Linkify
         if (in_array('comment', $this->linkify_sections)) {
             add_filter('get_comment_text', array($this, 'linkify_comment'), 13, 2);
             add_filter('get_comment_excerpt', array($this, 'linkify_comment'), 13, 2);
+        }
+    }
+
+        /**
+     * Linkify Full Description
+     */
+    public function linkify_content($content)
+    {
+        global $post;
+
+        if (empty($this->linkify_post_types) || ( isset($post->post_type) && ! in_array($post->post_type, $this->linkify_post_types) )) {
+            return $content;
+        }
+
+        if (! empty($this->disabled_linkify_on_posts) && isset($post->ID) && in_array($post->ID, $this->disabled_linkify_on_posts)) {
+            return $content;
+        }
+
+        $this->resetReplacedCounters();
+
+        return $this->filter_text($content);
+    }
+
+    /**
+     * Linkify Categories / Terms Description
+     */
+    public function linkify_term_content($content)
+    {
+
+        if (! is_category() && ! is_tax()) {
+            return $content;
+        }
+
+        if (empty($this->linkify_post_types)) {
+            return $content;
+        }
+
+        $queried_object = get_queried_object();
+
+        if (empty($queried_object) || ! isset($queried_object->term_id)) {
+            return $content;
+        }
+
+        $taxonomy = get_taxonomy($queried_object->taxonomy);
+
+        $common_post_types = array_intersect($taxonomy->object_type, $this->linkify_post_types);
+        if (empty($common_post_types)) {
+            return $content;
+        }
+
+        $this->resetReplacedCounters();
+
+        return $this->filter_text($content);
+    }
+
+    /**
+     * Linkify Widget
+     */
+    public function linkify_widget($content)
+    {
+        $this->resetReplacedCounters();
+        return $this->filter_text($content);
+    }
+
+    /**
+     * Linkify Comment
+     */
+    public function linkify_comment($content, $comment)
+    {
+        $comment_post = get_post($comment->comment_post_ID);
+
+        if (empty($this->linkify_post_types) || ( isset($comment_post->post_type) && ! in_array($comment_post->post_type, $this->linkify_post_types) )) {
+            return $content;
+        }
+
+        if (! empty($this->disabled_linkify_on_posts) && isset($comment_post->ID) && in_array($comment_post->ID, $this->disabled_linkify_on_posts)) {
+            return $content;
+        }
+
+        return $this->filter_text($content);
+    }
+
+    private function resetReplacedCounters()
+    {
+        if (!$this->is_term_limit_for_full_page) {
+            $this->replaced_terms = array();
+            $this->replaced_synonyms = array();
         }
     }
 
