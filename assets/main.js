@@ -16,8 +16,9 @@ jQuery( document ).ready(function($) {
 						$(this).show();
 						$block_visible_items++;
 					} else {
-						var $spellings = $(this).attr('data-spellings').split('|');
+						var $spellings = $(this).attr('data-spellings');
 						if ($spellings) {
+							$spellings = $spellings.split('|');
 							var $foundSpelling = false;
 							for (let i = 0; i < $spellings.length; i++) {
 								if ($spellings[i].includes($keyword)) {
