@@ -260,7 +260,11 @@ class Plugin
         if ($post->post_type === self::POST_TYPE && empty($post->post_excerpt)) {
             $associatedTerm = $this->getAssociatedTerm($post->ID);
             if ($associatedTerm) {
-                return $associatedTerm->post_excerpt;
+                $content = $associatedTerm->post_excerpt;
+                if (empty($content)) {
+                    $content = $associatedTerm->post_content;
+                }
+                return $content;
             }
         }
         return $content;
