@@ -238,9 +238,10 @@ class Plugin
             'orderby' => 'title',
             'order' => 'ASC'
         );
-        if (!empty($args['term_id'])) {
+        $associatedSynonymId = $args['term_id'] ?? (self::PARENT_POST_TYPE === get_post_type() ? get_the_ID() : null);
+        if ($associatedSynonymId) {
             $query_args['meta_key'] = self::ASSOCIATED_TERM;
-            $query_args['meta_value'] = $args['term_id'];
+            $query_args['meta_value'] = $associatedSynonymId;
         }
         $synonyms = wp_list_pluck(get_posts($query_args), 'post_title');
         return implode(', ', $synonyms);
